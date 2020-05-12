@@ -7,7 +7,7 @@ with io.open('README.md', 'rt') as f:
 
 setup(
     name='monom',
-    version=monom.__version__,
+    version="1.2.0",
     url='https://github.com/cymoo/monom',
     description='An object mapper for MongoDB with type hints.',
     long_description=readme,
