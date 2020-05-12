@@ -30,6 +30,9 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     packages=['monom'],
+    package_data={
+        "monom": ["py.typed"]
+    },
     python_requires='>=3.6',
     install_requires=['pymongo>=3.7'],
     extras_require={'dev': ['pytest']},
