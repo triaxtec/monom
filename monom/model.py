@@ -40,6 +40,9 @@ def _hint_to_field(hint_type: Union[Type, Any]) -> Field:
             return ListField()
         else:
             return ArrayField(_hint_to_field(arg))
+    for _type, field_type in hint_field_map.items():
+        if issubclass(hint_type, _type):
+            return field_type()
     raise TypeError('cannot convert {!r} to a field'.format(hint_type))
 
 
