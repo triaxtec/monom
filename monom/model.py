@@ -64,6 +64,9 @@ def _hint_to_field(hint_type: Union[Type, Any]) -> Field:
             return OptionalField(_hint_to_field(args[1]))
         if isinstance(None, args[1]):
             return OptionalField(_hint_to_field(args[0]))
+    for _type, field_type in hint_field_map.items():
+        if issubclass(hint_type, _type):
+            return field_type()
     raise TypeError('cannot convert {!r} to a field'.format(hint_type))
 
 
