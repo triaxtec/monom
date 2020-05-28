@@ -65,6 +65,8 @@ def _hint_to_field(hint_type: Union[Type, Any]) -> Field:
         if isinstance(None, args[1]):
             return OptionalField(_hint_to_field(args[0]))
     for _type, field_type in hint_field_map.items():
+        if _type is Any:
+            continue
         if issubclass(hint_type, _type):
             return field_type()
     raise TypeError('cannot convert {!r} to a field'.format(hint_type))
@@ -121,6 +123,7 @@ class ModelType(type):
         required = getattr(meta, 'required', [])
         converters = getattr(meta, 'converters', {})
         validators = getattr(meta, 'validators', {})
+        validate_fields = getattr(meta, 'validate_fields', True)
 
         def ensure_field_exist(name):
             if name not in fields:
@@ -131,6 +134,9 @@ class ModelType(type):
 
         if len(aliases) != len({alias[1] for alias in aliases}):
             raise ValueError('Duplicated alias found in {!r}.'.format(cls))
+
+        for field in fields.values():
+            field.validate_values &= validate_fields
 
         for field_name, alias in aliases:
             ensure_field_exist(field_name)

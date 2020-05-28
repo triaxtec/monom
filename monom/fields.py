@@ -79,12 +79,14 @@ class Field:
         default: Any = _missing,
         converter: Callable = None,
         validator: Callable[[Any], bool] = None,
+        validate: bool = True,
     ):
         self.name = name
         self.required = required
         self.default = default
         self.converter = converter
         self.validator = validator
+        self.validate_values = validate
 
     def convert(self, value: Any) -> Any:
         default = self.default
@@ -92,11 +94,13 @@ class Field:
         if value is _missing and default is not _missing:
             value = default() if callable(default) else default
 
-        if value is not _missing and self.converter is not None:
+        if self.validate_values and value is not _missing and self.converter is not None:
             value = self.converter(value)
         return value
 
     def validate(self, value: Any) -> None:
+        if not self.validate_values:
+            return
         if value is _missing and self.required:
             raise ValidationError('Field {!r} is missing.'.format(self.name))
 
@@ -118,7 +122,7 @@ class Field:
             raise AttributeError('Field {!r} has no value; '
                                  'did you filter it out using projection query?'.format(name)) from None
 
-        if not isinstance(self, (EmbeddedField, ArrayField)):
+        if not isinstance(self, (EmbeddedField, ArrayField)) or not self.validate_values:
             return value
 
         if name not in dk:
@@ -139,6 +143,8 @@ class Field:
         name = self.name
 
         dk['_data'][name] = value
+        if not self.validate_values:
+            return
         if isinstance(self, EmbeddedField):
             # noinspection PyProtectedMember
             dk[name] = self.model._from_clean_data(value)
@@ -170,6 +176,8 @@ class StringField(Field):
         self.min_length = min_length
 
     def validate(self, value: Any) -> None:
+        if not self.validate_values:
+            return
         super().validate(value)
         if value is not _missing:
             if self.max_length is not None:
@@ -187,6 +195,8 @@ class NumberField(Field):
         self.min_value = min_value
 
     def validate(self, value: Any) -> None:
+        if not self.validate_values:
+            return
         super().validate(value)
         if value is not _missing:
             if self.max_value is not None:
@@ -239,6 +249,8 @@ class ArrayField(ListField):
 
     def convert(self, values: Any) -> Union[MutableSequence, Missing]:
         values = super().convert(values)
+        if not self.validate_values:
+            return values
         if values is _missing:
             return _missing
 
@@ -248,6 +260,8 @@ class ArrayField(ListField):
         return [self.field.convert(value) for value in values]
 
     def validate(self, values: Union[MutableSequence, Missing]) -> None:
+        if not self.validate_values:
+            return
         super().validate(values)
         if values is _missing:
             return
@@ -317,6 +331,8 @@ class EmbeddedField(DictField):
         return {name: getattr(self.model, name) for name in field_names}
 
     def convert(self, obj: Any) -> Union[MutableMapping, Missing]:
+        if not self.validate_values:
+            return obj
         if isinstance(obj, self.model):
             # we can safely skip `convert` and 'validate` because it must have been done before.
             # `dict` cannot be used because setting an attr on it is invalid.
@@ -346,7 +362,7 @@ class EmbeddedField(DictField):
         return rv
 
     def validate(self, obj: Union[MutableMapping, Missing]) -> None:
-        if hasattr(obj, '_skip_validate'):
+        if hasattr(obj, '_skip_validate') or not self.validate_values:
             return
 
         super().validate(obj)

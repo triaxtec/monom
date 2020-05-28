@@ -327,6 +327,23 @@ class TestArrayField:
         assert 'EmbeddedModel' in err.value.args[0]
 
 
+def test_no_validate():
+    class MainModel(BaseModel):
+        f1: List[int]
+
+        class Meta:
+            validate_fields = False
+
+    obj = MainModel(f1=[1, 2, 3])
+    assert obj.f1[2] == 3
+
+    obj = MainModel(f1='abc')
+    assert obj.f1 == "abc"
+
+    obj = MainModel(f1=[1, 'a'])
+    assert obj.f1 == [1, "a"]
+
+
 def test_invalid_field_type():
     class Foo:
         pass
