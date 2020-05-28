@@ -2,6 +2,7 @@
 .env
 *.py[co]
 venv/
+.venv/
 env/
 env*
 dist/
