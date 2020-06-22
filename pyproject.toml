@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "monom"
-version = "1.2.2"
+version = "1.2.3"
 description = "An object mapper for MongoDB with type hints."
 authors = ["cymoo <wakenee@hotmail.com>"]
 license = "MIT"
