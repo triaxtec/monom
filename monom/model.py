@@ -13,7 +13,7 @@ from typing import (
     Union,
     get_args,
     get_origin,
-    get_type_hints,
+    get_type_hints, Dict,
 )
 
 from bson.json_util import dumps
@@ -58,6 +58,8 @@ def _hint_to_field(hint_type: Union[Type, Any]) -> Field:
             return ListField()
         else:
             return ArrayField(_hint_to_field(arg))
+    if origin in (dict, Dict):
+        return DictField()
     if origin is Union and len(args) == 2:
         # Could be an Optional type
         if isinstance(None, args[0]):
